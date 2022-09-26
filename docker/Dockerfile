@@ -33,6 +33,26 @@ RUN apt-get install -yq \
 
 ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64
 
+# Install Rust
+# ------------
+
+ENV RUST_VERSION=1.64.0
+RUN curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain $RUST_VERSION -y
+ENV PATH /root/.cargo/bin:$PATH
+
+RUN rustup target add \
+    x86_64-pc-windows-gnu \
+    aarch64-linux-android \
+    armv7-linux-androideabi \
+    x86_64-linux-android \
+    i686-linux-android \
+    x86_64-apple-darwin \
+    x86_64-unknown-linux-gnu \
+    i686-unknown-linux-gnu
+
+RUN mkdir /root/.cargo/git
+RUN mkdir /root/.cargo/registry
+
 # Install android SDK
 # -------------------
 
@@ -81,25 +101,6 @@ ARG UBER_APK_SIGNER_FILENAME=uber-apk-signer-$UBER_APK_SIGNER_VERSION.jar
 ARG UBER_APK_SIGNER_URL=$UBER_APK_SIGNER_BASE_URL/$UBER_APK_SIGNER_FILENAME
 WORKDIR $ANDROID_BUILD_TOOLS_PATH
 RUN wget -nc -nv $UBER_APK_SIGNER_URL && ln -s $UBER_APK_SIGNER_FILENAME uber-apk-signer.jar
-
-# Install Rust
-# ------------
-
-RUN curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain stable -y
-ENV PATH /root/.cargo/bin:$PATH
-
-RUN rustup target add \
-    x86_64-pc-windows-gnu \
-    aarch64-linux-android \
-    armv7-linux-androideabi \
-    x86_64-linux-android \
-    i686-linux-android \
-    x86_64-apple-darwin \
-    x86_64-unknown-linux-gnu \
-    i686-unknown-linux-gnu
-
-RUN mkdir /root/.cargo/git
-RUN mkdir /root/.cargo/registry
 
 # Configure Rust for Android cross-compiling
 # ------------------------------------------
