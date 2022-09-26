@@ -46,23 +46,31 @@ ARG ANDROID_SDK_DIR=android-sdk-linux
 ARG ANDROID_SDK_FILENAME=$ANDROID_SDK_RELEASE-linux.tgz
 ARG ANDROID_SDK_URL=$ANDROID_BASE_URL/$ANDROID_SDK_FILENAME
 ARG ANDROID_SDK_PATH=$ANDROID_BUILD_TOOLS_PATH/$ANDROID_SDK_DIR
+ENV ANDROID_SDK_ROOT=$ANDROID_SDK_PATH
 
 RUN wget -nc -nv $ANDROID_SDK_URL && tar -xzf $ANDROID_SDK_FILENAME && rm $ANDROID_SDK_FILENAME
+
+# Install android commandline tools
+# ---------------------------------
+
+ENV ANDROID_CMDLINETOOLS_RELEASE=8512546
+ARG ANDROID_CMDLINETOOLS_FILENAME=commandlinetools-linux-${ANDROID_CMDLINETOOLS_RELEASE}_latest.zip
+ARG ANDROID_CMDLINETOOLS_URL=${ANDROID_BASE_URL}/repository/${ANDROID_CMDLINETOOLS_FILENAME}
+ARG ANDROID_CMDLINETOOLS_PATH=${ANDROID_SDK_PATH}/cmdline-tools
+WORKDIR ${ANDROID_CMDLINETOOLS_PATH}
+RUN wget -nc -nv $ANDROID_CMDLINETOOLS_URL && unzip -d latest $ANDROID_CMDLINETOOLS_FILENAME && rm ${ANDROID_CMDLINETOOLS_FILENAME}
+WORKDIR ${ANDROID_CMDLINETOOLS_PATH}/latest
+RUN mv cmdline-tools/* .
+RUN rm -rf cmdline-tools/
 
 # Install android NDK
 # -------------------
 
-ENV ANDROID_NDK_RELEASE=android-ndk-r21d
-ARG ANDROID_NDK_DIR=$ANDROID_NDK_RELEASE
-ARG ANDROID_NDK_FILENAME=$ANDROID_NDK_RELEASE-linux-x86_64.zip
-ARG ANDROID_NDK_URL=$ANDROID_BASE_URL/repository/$ANDROID_NDK_FILENAME
-ARG ANDROID_NDK_PATH=$ANDROID_BUILD_TOOLS_PATH/$ANDROID_NDK_DIR
-ARG ANDROID_NDK_GCC_VERSION=4.9
-
-RUN wget -nc -nv $ANDROID_NDK_URL && unzip -q $ANDROID_NDK_FILENAME && rm $ANDROID_NDK_FILENAME && rm -rf $ANDROID_NDK_PATH/toolchains/*-$ANDROID_NDK_GCC_VERSION
-
-RUN curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain stable -y
-ENV PATH /root/.cargo/bin:$PATH
+ENV ANDROID_NDK_VERSION=21.4.7075529
+RUN yes | bin/sdkmanager --licenses
+RUN bin/sdkmanager --install "ndk;${ANDROID_NDK_VERSION}" --channel=3
+ARG ANDROID_NDK_DIR=ndk/${ANDROID_NDK_VERSION}
+ARG ANDROID_NDK_PATH=${ANDROID_SDK_PATH}/${ANDROID_NDK_DIR}
 
 # Install uber APK signer
 # -----------------------
@@ -76,6 +84,9 @@ RUN wget -nc -nv $UBER_APK_SIGNER_URL && ln -s $UBER_APK_SIGNER_FILENAME uber-ap
 
 # Install Rust
 # ------------
+
+RUN curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain stable -y
+ENV PATH /root/.cargo/bin:$PATH
 
 RUN rustup target add \
     x86_64-pc-windows-gnu \
@@ -108,8 +119,6 @@ RUN echo >> /root/.cargo/config
 RUN echo "[target.i686-linux-android]" >> /root/.cargo/config
 RUN find $ANDROID_NDK_PATH -name i686-linux-android21-clang++ -printf 'linker = "%p"\n' >> /root/.cargo/config
 RUN echo >> /root/.cargo/config
-
-ENV ANDROID_SDK_ROOT=$ANDROID_NDK_PATH
 
 # Install OSX cross build env
 # ---------------------------
