@@ -26,7 +26,7 @@ RUN apt-get install -yq \
     binutils-mingw-w64 gcc-mingw-w64 g++-mingw-w64 \
     libxml2-dev libz-dev \
     ca-certificates default-jre-headless \
-    godot3 mono-devel \
+#    godot3 mono-devel \
     libsaxon-java nunit xvfb \
     vim \
     && apt-get clean
@@ -155,26 +155,27 @@ ARG GODOT_BASE_URL=https://downloads.tuxfamily.org/godotengine
 ENV GODOT_DIR=/opt/godotengine
 WORKDIR $GODOT_DIR
 RUN for i in x11 linux_headless linux_server ; do wget -nc -nv $GODOT_BASE_URL/$GODOT_VERSION/Godot_v$GODOT_VERSION-stable_$i.64.zip ; done && for i in *.zip ; do unzip -q $i ; done && rm *.zip
-RUN for i in x11 linux_headless linux_server ; do wget -nc -nv $GODOT_BASE_URL/$GODOT_VERSION/mono/Godot_v$GODOT_VERSION-stable_mono_${i}_64.zip ; done && for i in *.zip ; do unzip -q $i ; done && rm *.zip
+# RUN for i in x11 linux_headless linux_server ; do wget -nc -nv $GODOT_BASE_URL/$GODOT_VERSION/mono/Godot_v$GODOT_VERSION-stable_mono_${i}_64.zip ; done && for i in *.zip ; do unzip -q $i ; done && rm *.zip
 RUN ln -s Godot_v$GODOT_VERSION-stable_x11.64 godot3 && \
     ln -s Godot_v$GODOT_VERSION-stable_x11.64 godot && \
     ln -s Godot_v$GODOT_VERSION-stable_linux_headless.64 godot3_headless && \
     ln -s Godot_v$GODOT_VERSION-stable_linux_headless.64 godot_headless && \
     ln -s Godot_v$GODOT_VERSION-stable_linux_server.64 godot3_server && \
-    ln -s Godot_v$GODOT_VERSION-stable_linux_server.64 godot_server && \
-    ln -s Godot_v$GODOT_VERSION-stable_mono_x11_64 godot3_mono && \
-    ln -s Godot_v$GODOT_VERSION-stable_mono_x11_64 godot_mono && \
-    ln -s Godot_v$GODOT_VERSION-stable_mono_linux_headless_64 godot3_mono_headless && \
-    ln -s Godot_v$GODOT_VERSION-stable_mono_linux_headless_64 godot_mono_headless && \
-    ln -s Godot_v$GODOT_VERSION-stable_mono_linux_server_64 godot3_mono_server && \
-    ln -s Godot_v$GODOT_VERSION-stable_mono_linux_server_64 godot_mono_server && \
-    ln -s Godot_v$GODOT_VERSION-stable_mono_x11.64 godot3_mono/godot3_mono && \
-    ln -s Godot_v$GODOT_VERSION-stable_mono_x11.64 godot_mono/godot_mono && \
-    ln -s Godot_v$GODOT_VERSION-stable_mono_linux_headless.64 godot3_mono_headless/godot3_mono_headless && \
-    ln -s Godot_v$GODOT_VERSION-stable_mono_linux_headless.64 godot_mono_headless/godot_mono_headless && \
-    ln -s Godot_v$GODOT_VERSION-stable_mono_linux_server.64 godot3_mono_server/godot3_mono_server && \
-    ln -s Godot_v$GODOT_VERSION-stable_mono_linux_server.64 godot_mono_server/godot_mono_server
-ENV PATH=$GODOT_DIR:$GODOT_DIR/godot3_mono:$GODOT_DIR/godot3_mono_headless:$GODOT_DIR/godot3_mono_server:$PATH
+    ln -s Godot_v$GODOT_VERSION-stable_linux_server.64 godot_server
+#    ln -s Godot_v$GODOT_VERSION-stable_mono_x11_64 godot3_mono && \
+#    ln -s Godot_v$GODOT_VERSION-stable_mono_x11_64 godot_mono && \
+#    ln -s Godot_v$GODOT_VERSION-stable_mono_linux_headless_64 godot3_mono_headless && \
+#    ln -s Godot_v$GODOT_VERSION-stable_mono_linux_headless_64 godot_mono_headless && \
+#    ln -s Godot_v$GODOT_VERSION-stable_mono_linux_server_64 godot3_mono_server && \
+#    ln -s Godot_v$GODOT_VERSION-stable_mono_linux_server_64 godot_mono_server && \
+#    ln -s Godot_v$GODOT_VERSION-stable_mono_x11.64 godot3_mono/godot3_mono && \
+#    ln -s Godot_v$GODOT_VERSION-stable_mono_x11.64 godot_mono/godot_mono && \
+#    ln -s Godot_v$GODOT_VERSION-stable_mono_linux_headless.64 godot3_mono_headless/godot3_mono_headless && \
+#    ln -s Godot_v$GODOT_VERSION-stable_mono_linux_headless.64 godot_mono_headless/godot_mono_headless && \
+#    ln -s Godot_v$GODOT_VERSION-stable_mono_linux_server.64 godot3_mono_server/godot3_mono_server && \
+#    ln -s Godot_v$GODOT_VERSION-stable_mono_linux_server.64 godot_mono_server/godot_mono_server
+# ENV PATH=$GODOT_DIR:$GODOT_DIR/godot3_mono:$GODOT_DIR/godot3_mono_headless:$GODOT_DIR/godot3_mono_server:$PATH
+ENV PATH=$GODOT_DIR:$PATH
 
 # Install Godot export templates
 # ------------------------------
@@ -182,7 +183,7 @@ ENV PATH=$GODOT_DIR:$GODOT_DIR/godot3_mono:$GODOT_DIR/godot3_mono_headless:$GODO
 ARG GODOT_TEMPLATE_DIR=/root/.local/share/godot/templates
 WORKDIR $GODOT_TEMPLATE_DIR
 RUN wget -nc -nv $GODOT_BASE_URL/$GODOT_VERSION/Godot_v$GODOT_VERSION-stable_export_templates.tpz && unzip -q Godot_v$GODOT_VERSION-stable_export_templates.tpz && rm Godot_v$GODOT_VERSION-stable_export_templates.tpz && mv templates $GODOT_VERSION.stable
-RUN wget -nc -nv $GODOT_BASE_URL/$GODOT_VERSION/mono/Godot_v$GODOT_VERSION-stable_mono_export_templates.tpz && unzip -q Godot_v$GODOT_VERSION-stable_mono_export_templates.tpz && rm Godot_v$GODOT_VERSION-stable_mono_export_templates.tpz && mv templates $GODOT_VERSION.stable.mono
+# RUN wget -nc -nv $GODOT_BASE_URL/$GODOT_VERSION/mono/Godot_v$GODOT_VERSION-stable_mono_export_templates.tpz && unzip -q Godot_v$GODOT_VERSION-stable_mono_export_templates.tpz && rm Godot_v$GODOT_VERSION-stable_mono_export_templates.tpz && mv templates $GODOT_VERSION.stable.mono
 
 # Setup editor defaults so that export works
 # ------------------------------------------
