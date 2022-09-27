@@ -58,3 +58,6 @@ junit-results.xml
 /godot/android
 .vs
 logs
+
+# Others
+**/*.orig
