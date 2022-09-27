@@ -6,7 +6,7 @@
 FROM ubuntu:focal
 
 MAINTAINER Christian Mauduit "ufoot@ufoot.org"
-ENV GRCC_VERSION=0.2.3
+ARG GRCC_VERSION
 LABEL package="godot-rust-cross-compiler" version="$GRCC_VERSION" description="An image to cross-compile to Windows, Android, Mac OS X, iOS and Linux your godot-rust based libraries."
 
 # Prepare the system, install Debian packages
