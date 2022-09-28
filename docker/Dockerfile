@@ -47,7 +47,8 @@ RUN rustup target add \
     i686-linux-android \
     x86_64-apple-darwin \
     x86_64-unknown-linux-gnu \
-    i686-unknown-linux-gnu
+    i686-unknown-linux-gnu \
+    aarch64-apple-ios
 
 RUN mkdir /root/.cargo/git
 RUN mkdir /root/.cargo/registry
@@ -123,12 +124,12 @@ RUN echo >> /root/.cargo/config
 # Install OSX cross build env
 # ---------------------------
 
+ENV MACOSX_SDK_VERSION=10.10
+ARG OSXCROSS_COMMIT=7c090bd8cd4ad28cf332f1d02267630d8f333c19
 ARG MACOSX_BUILD_TOOLS_PATH=/opt/macosx-build-tools
 ARG OSXCROSS_PATH=$MACOSX_BUILD_TOOLS_PATH/osxcross
-ARG OSXCROSS_COMMIT=7c090bd8cd4ad28cf332f1d02267630d8f333c19
 ARG MACOSX_CROSS_COMPILER_PATH=$MACOSX_BUILD_TOOLS_PATH/cross-compiler
 ARG MACOSX_SDK_BASE_URL=https://s3.dockerproject.org/darwin/v2
-ENV MACOSX_SDK_VERSION=10.10
 ARG MACOSX_SDK_FILENAME=MacOSX$MACOSX_SDK_VERSION.sdk.tar.xz
 WORKDIR $MACOSX_BUILD_TOOLS_PATH
 RUN git clone https://github.com/tpoechtrager/osxcross
@@ -138,6 +139,7 @@ RUN echo install $MACOSX_SDK_BASE_URL/$MACOSX_SDK_FILENAME
 RUN wget -nc -nv $MACOSX_SDK_BASE_URL/$MACOSX_SDK_FILENAME
 RUN mv $MACOSX_SDK_FILENAME tarballs/
 RUN UNATTENDED=yes OSX_VERSION_MIN=10.7 TARGET_DIR=$MACOSX_CROSS_COMPILER_PATH ./build.sh 2>&1 | tee build.log
+ARG MACOSX_SDK_PATH=${MACOSX_CROSS_COMPILER_PATH}/SDK
 
 # Configure Rust for Mac OS X cross-compiling
 # -------------------------------------------
@@ -149,11 +151,13 @@ RUN echo >> /root/.cargo/config
 # Install iPhoneOS SDK and iOS toolchain
 # --------------------------------------
 
+ENV IOS_SDK_VERSION=9.3
 ARG IOS_BUILD_TOOLS_PATH=/opt/ios-build-tools
 ARG IOS_CROSS_COMPILER_PATH=$IOS_BUILD_TOOLS_PATH/linux
 WORKDIR $IOS_BUILD_TOOLS_PATH
 RUN git clone https://github.com/theos/sdks.git
 RUN wget -nc -nv -O linux-cctools.tar.gz https://kabiroberai.com/toolchain/download.php?toolchain=ios-linux && tar -xzf linux-cctools.tar.gz
+ARG IOS_SDK_PATH=${IOS_BUILD_TOOLS_PATH}/sdks
 
 # Configure Rust for iOS cross-compiling
 # -------------------------------------------
@@ -163,14 +167,15 @@ RUN find $IOS_CROSS_COMPILER_PATH -name arm64-apple-darwin14-ar -printf 'ar = "%
 RUN find $IOS_CROSS_COMPILER_PATH -name arm64-apple-darwin14-clang -printf 'linker = "%p"\n' >> /root/.cargo/config
 RUN echo >> /root/.cargo/config
 
-# Create xcrun script
-# -------------------
+# Copy xcrun script
+# -----------------
 
-RUN mkdir -p /opt/ios-build-tools/bin
-RUN echo "#!/bin/bash" >> /opt/ios-build-tools/bin/xcrun
-RUN echo "echo \"/opt/ios-build-tools/sdks/iPhoneOS14.4.sdk\"" >> /opt/ios-build-tools/bin/xcrun
-RUN chmod +x /opt/ios-build-tools/bin/xcrun
-ENV PATH=/opt/ios-build-tools/bin:$PATH
+ARG IOS_BUILD_TOOLS_BIN_PATH=${IOS_BUILD_TOOLS_PATH}/bin
+WORKDIR ${IOS_BUILD_TOOLS_BIN_PATH}
+COPY ./xcrun .
+RUN sed -i "s|<macosx-sdk-path>|${MACOSX_SDK_PATH}|;s|<macosx-sdk-version>|${MACOSX_SDK_VERSION}|;s|<ios-sdk-path>|${IOS_SDK_PATH}|;s|<ios-sdk-version>|${IOS_SDK_VERSION}|g" xcrun
+RUN chmod +x ./xcrun
+ENV PATH=${IOS_BUILD_TOOLS_BIN_PATH}:$PATH
 
 # Install all flavors of Godot
 # ----------------------------
