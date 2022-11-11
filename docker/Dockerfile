@@ -180,7 +180,7 @@ ENV PATH=${IOS_BUILD_TOOLS_BIN_PATH}:$PATH
 # Install all flavors of Godot
 # ----------------------------
 
-ENV GODOT_VERSION=3.2.3
+ENV GODOT_VERSION=3.5.1
 ARG GODOT_BASE_URL=https://downloads.tuxfamily.org/godotengine
 ENV GODOT_DIR=/opt/godotengine
 WORKDIR $GODOT_DIR
