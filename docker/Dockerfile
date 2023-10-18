@@ -35,7 +35,7 @@ ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64
 # Install Rust
 # ------------
 
-ENV RUST_VERSION=1.64.0
+ENV RUST_VERSION=1.72.0
 RUN curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain $RUST_VERSION -y
 ENV PATH /root/.cargo/bin:$PATH
 
@@ -86,7 +86,7 @@ RUN rm -rf cmdline-tools/
 # Install android NDK
 # -------------------
 
-ENV ANDROID_NDK_VERSION=21.4.7075529
+ENV ANDROID_NDK_VERSION=26.1.10909125
 RUN yes | bin/sdkmanager --licenses
 RUN bin/sdkmanager --install "ndk;${ANDROID_NDK_VERSION}" --channel=3
 ARG ANDROID_NDK_DIR=ndk/${ANDROID_NDK_VERSION}
@@ -180,7 +180,7 @@ ENV PATH=${IOS_BUILD_TOOLS_BIN_PATH}:$PATH
 # Install all flavors of Godot
 # ----------------------------
 
-ENV GODOT_VERSION=3.5.1
+ENV GODOT_VERSION=3.5.2
 ARG GODOT_BASE_URL=https://downloads.tuxfamily.org/godotengine
 ENV GODOT_DIR=/opt/godotengine
 WORKDIR $GODOT_DIR
