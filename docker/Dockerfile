@@ -46,6 +46,7 @@ RUN rustup target add \
     x86_64-linux-android \
     i686-linux-android \
     x86_64-apple-darwin \
+    aarch64-apple-darwin \
     x86_64-unknown-linux-gnu \
     i686-unknown-linux-gnu \
     aarch64-apple-ios
@@ -124,12 +125,12 @@ RUN echo >> /root/.cargo/config
 # Install OSX cross build env
 # ---------------------------
 
-ENV MACOSX_SDK_VERSION=10.10
-ARG OSXCROSS_COMMIT=7c090bd8cd4ad28cf332f1d02267630d8f333c19
+ENV MACOSX_SDK_VERSION=11.3
+ARG OSXCROSS_COMMIT=ff8d100f3f026b4ffbe4ce96d8aac4ce06f1278b
 ARG MACOSX_BUILD_TOOLS_PATH=/opt/macosx-build-tools
 ARG OSXCROSS_PATH=$MACOSX_BUILD_TOOLS_PATH/osxcross
 ARG MACOSX_CROSS_COMPILER_PATH=$MACOSX_BUILD_TOOLS_PATH/cross-compiler
-ARG MACOSX_SDK_BASE_URL=https://s3.dockerproject.org/darwin/v2
+ARG MACOSX_SDK_BASE_URL=https://github.com/phracker/MacOSX-SDKs/releases/download/${MACOSX_SDK_VERSION}
 ARG MACOSX_SDK_FILENAME=MacOSX$MACOSX_SDK_VERSION.sdk.tar.xz
 WORKDIR $MACOSX_BUILD_TOOLS_PATH
 RUN git clone https://github.com/tpoechtrager/osxcross
@@ -138,14 +139,18 @@ RUN git checkout $OSXCROSS_COMMIT
 RUN echo install $MACOSX_SDK_BASE_URL/$MACOSX_SDK_FILENAME
 RUN wget -nc -nv $MACOSX_SDK_BASE_URL/$MACOSX_SDK_FILENAME
 RUN mv $MACOSX_SDK_FILENAME tarballs/
-RUN UNATTENDED=yes OSX_VERSION_MIN=10.7 TARGET_DIR=$MACOSX_CROSS_COMPILER_PATH ./build.sh 2>&1 | tee build.log
+RUN UNATTENDED=yes TARGET_DIR=$MACOSX_CROSS_COMPILER_PATH ./build.sh 2>&1 | tee build.log
 ARG MACOSX_SDK_PATH=${MACOSX_CROSS_COMPILER_PATH}/SDK
 
 # Configure Rust for Mac OS X cross-compiling
 # -------------------------------------------
 
 RUN echo "[target.x86_64-apple-darwin]" >> /root/.cargo/config
-RUN find $MACOSX_CROSS_COMPILER_PATH -name x86_64-apple-darwin14-cc -printf 'linker = "%p"\n' >> /root/.cargo/config
+RUN find $MACOSX_CROSS_COMPILER_PATH -name x86_64-apple-darwin20.4-cc -printf 'linker = "%p"\n' >> /root/.cargo/config
+RUN echo >> /root/.cargo/config
+
+RUN echo "[target.aarch64-apple-darwin]" >> /root/.cargo/config
+RUN find $MACOSX_CROSS_COMPILER_PATH -name aarch64-apple-darwin20.4-cc -printf 'linker = "%p"\n' >> /root/.cargo/config
 RUN echo >> /root/.cargo/config
 
 # Install iPhoneOS SDK and iOS toolchain
