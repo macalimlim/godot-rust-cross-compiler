@@ -146,11 +146,11 @@ ARG MACOSX_SDK_PATH=${MACOSX_CROSS_COMPILER_PATH}/SDK
 # -------------------------------------------
 
 RUN echo "[target.x86_64-apple-darwin]" >> /root/.cargo/config
-RUN find $MACOSX_CROSS_COMPILER_PATH -name x86_64-apple-darwin20.4-cc -printf 'linker = "%p"\n' >> /root/.cargo/config
+RUN OSXCROSS_TARGET=$( ${MACOSX_CROSS_COMPILER_PATH}/bin/osxcross-conf | grep OSXCROSS_TARGET= | awk -F'=' '{print $2}' ) && find ${MACOSX_CROSS_COMPILER_PATH} -name x86_64-apple-$OSXCROSS_TARGET-cc -printf 'linker = "%p"\n' >> /root/.cargo/config
 RUN echo >> /root/.cargo/config
 
 RUN echo "[target.aarch64-apple-darwin]" >> /root/.cargo/config
-RUN find $MACOSX_CROSS_COMPILER_PATH -name aarch64-apple-darwin20.4-cc -printf 'linker = "%p"\n' >> /root/.cargo/config
+RUN OSXCROSS_TARGET=$( ${MACOSX_CROSS_COMPILER_PATH}/bin/osxcross-conf | grep OSXCROSS_TARGET= | awk -F'=' '{print $2}' ) && find ${MACOSX_CROSS_COMPILER_PATH} -name aarch64-apple-$OSXCROSS_TARGET-cc -printf 'linker = "%p"\n' >> /root/.cargo/config
 RUN echo >> /root/.cargo/config
 
 # Install iPhoneOS SDK and iOS toolchain
