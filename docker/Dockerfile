@@ -156,20 +156,25 @@ RUN echo >> /root/.cargo/config
 # Install iPhoneOS SDK and iOS toolchain
 # --------------------------------------
 
-ENV IOS_SDK_VERSION=9.3
+ENV IOS_SDK_VERSION=14.5
 ARG IOS_BUILD_TOOLS_PATH=/opt/ios-build-tools
-ARG IOS_CROSS_COMPILER_PATH=$IOS_BUILD_TOOLS_PATH/linux
+ARG IOS_CROSS_COMPILER_PATH=$IOS_BUILD_TOOLS_PATH/cross-compiler
 WORKDIR $IOS_BUILD_TOOLS_PATH
-RUN git clone https://github.com/theos/sdks.git
-RUN wget -nc -nv -O linux-cctools.tar.gz https://kabiroberai.com/toolchain/download.php?toolchain=ios-linux && tar -xzf linux-cctools.tar.gz
+RUN git clone https://github.com/theos/sdks
 ARG IOS_SDK_PATH=${IOS_BUILD_TOOLS_PATH}/sdks
+WORKDIR ${IOS_SDK_PATH}
+RUN tar -cf - ./iPhoneOS${IOS_SDK_VERSION}.sdk | xz -9 -c - > iPhoneOS${IOS_SDK_VERSION}.sdk.tar.xz
+WORKDIR ${OSXCROSS_PATH}/build/cctools-port/usage_examples/ios_toolchain
+RUN ./build.sh ${IOS_SDK_PATH}/iPhoneOS${IOS_SDK_VERSION}.sdk.tar.xz arm64
+WORKDIR ${IOS_CROSS_COMPILER_PATH}
+RUN mv ${OSXCROSS_PATH}/build/cctools-port/usage_examples/ios_toolchain/target/* .
 
 # Configure Rust for iOS cross-compiling
 # -------------------------------------------
 
 RUN echo "[target.aarch64-apple-ios]" >> /root/.cargo/config
-RUN find $IOS_CROSS_COMPILER_PATH -name arm64-apple-darwin14-ar -printf 'ar = "%p"\n' >> /root/.cargo/config
-RUN find $IOS_CROSS_COMPILER_PATH -name arm64-apple-darwin14-clang -printf 'linker = "%p"\n' >> /root/.cargo/config
+RUN find ${IOS_CROSS_COMPILER_PATH} -name arm-apple-darwin11-ar -printf 'ar = "%p"\n' >> /root/.cargo/config
+RUN find ${IOS_CROSS_COMPILER_PATH} -name arm-apple-darwin11-clang -printf 'linker = "%p"\n' >> /root/.cargo/config
 RUN echo >> /root/.cargo/config
 
 # Copy xcrun script
