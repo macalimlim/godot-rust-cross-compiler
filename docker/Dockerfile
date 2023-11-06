@@ -17,7 +17,7 @@ RUN apt-get install -yq \
     sudo curl wget git zip unzip \
     file g++ cmake pkg-config \
     libasound2-dev bison flex \
-    ant openjdk-8-jdk adb \
+    ant openjdk-17-jdk adb \
     lib32stdc++6 lib32z1 libssl-dev python \
     g++-multilib gcc-multilib libc6-dev-i386 \
     llvm-dev libclang-dev clang \
@@ -30,7 +30,7 @@ RUN apt-get install -yq \
     vim \
     && apt-get clean
 
-ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64
+ENV JAVA_HOME /usr/lib/jvm/java-17-openjdk-amd64
 
 # Install Rust
 # ------------
@@ -54,27 +54,16 @@ RUN rustup target add \
 RUN mkdir /root/.cargo/git
 RUN mkdir /root/.cargo/registry
 
-# Install android SDK
-# -------------------
-
-ARG ANDROID_BUILD_TOOLS_PATH=/opt/android-build-tools
-WORKDIR $ANDROID_BUILD_TOOLS_PATH
-
-ARG ANDROID_BASE_URL=https://dl.google.com/android
-
-ENV ANDROID_SDK_RELEASE=android-sdk_r24.4.1
-ARG ANDROID_SDK_DIR=android-sdk-linux
-ARG ANDROID_SDK_FILENAME=$ANDROID_SDK_RELEASE-linux.tgz
-ARG ANDROID_SDK_URL=$ANDROID_BASE_URL/$ANDROID_SDK_FILENAME
-ARG ANDROID_SDK_PATH=$ANDROID_BUILD_TOOLS_PATH/$ANDROID_SDK_DIR
-ENV ANDROID_SDK_ROOT=$ANDROID_SDK_PATH
-
-RUN wget -nc -nv $ANDROID_SDK_URL && tar -xzf $ANDROID_SDK_FILENAME && rm $ANDROID_SDK_FILENAME
-
-# Install android commandline tools
+# Install Android commandline tools
 # ---------------------------------
 
-ENV ANDROID_CMDLINETOOLS_RELEASE=8512546
+ENV ANDROID_CMDLINETOOLS_RELEASE=10406996
+ARG ANDROID_BUILD_TOOLS_PATH=/opt/android-build-tools
+WORKDIR $ANDROID_BUILD_TOOLS_PATH
+ARG ANDROID_BASE_URL=https://dl.google.com/android
+ARG ANDROID_SDK_DIR=android-sdk-linux
+ARG ANDROID_SDK_PATH=$ANDROID_BUILD_TOOLS_PATH/$ANDROID_SDK_DIR
+ENV ANDROID_SDK_ROOT=$ANDROID_SDK_PATH
 ARG ANDROID_CMDLINETOOLS_FILENAME=commandlinetools-linux-${ANDROID_CMDLINETOOLS_RELEASE}_latest.zip
 ARG ANDROID_CMDLINETOOLS_URL=${ANDROID_BASE_URL}/repository/${ANDROID_CMDLINETOOLS_FILENAME}
 ARG ANDROID_CMDLINETOOLS_PATH=${ANDROID_SDK_PATH}/cmdline-tools
@@ -84,12 +73,15 @@ WORKDIR ${ANDROID_CMDLINETOOLS_PATH}/latest
 RUN mv cmdline-tools/* .
 RUN rm -rf cmdline-tools/
 
-# Install android NDK
-# -------------------
+# Install Android ndk, platform-tools, build-tools, platforms and cmake
+# ---------------------------------------------------------------------
 
 ENV ANDROID_NDK_VERSION=26.1.10909125
+ENV ANDROID_CMAKE_VERSION=3.10.2.4988404
+ENV ANDROID_BUILDTOOLS_VERSION=30.0.3
+ENV ANDROID_PLATFORMS_VERSION=android-31
 RUN yes | bin/sdkmanager --licenses
-RUN bin/sdkmanager --install "ndk;${ANDROID_NDK_VERSION}" --channel=3
+RUN bin/sdkmanager --sdk_root=${ANDROID_SDK_PATH} --install "ndk;${ANDROID_NDK_VERSION}" "platform-tools" "build-tools;${ANDROID_BUILDTOOLS_VERSION}" "platforms;${ANDROID_PLATFORMS_VERSION}" "cmake;${ANDROID_CMAKE_VERSION}" --channel=3
 ARG ANDROID_NDK_DIR=ndk/${ANDROID_NDK_VERSION}
 ARG ANDROID_NDK_PATH=${ANDROID_SDK_PATH}/${ANDROID_NDK_DIR}
 
@@ -238,10 +230,11 @@ RUN echo '[gd_resource type="EditorSettings" format=2]' >> $GODOT_EDITOR_CONFIG_
 RUN echo >> $GODOT_EDITOR_CONFIG_FILENAME
 RUN echo '[resource]' >> $GODOT_EDITOR_CONFIG_FILENAME
 RUN echo 'export/android/adb = "/usr/bin/adb"' >> $GODOT_EDITOR_CONFIG_FILENAME
+RUN echo "export/android/android_sdk_path = \"${ANDROID_SDK_PATH}\"" >> $GODOT_EDITOR_CONFIG_FILENAME
 RUN echo 'export/android/jarsigner = "/usr/bin/jarsigner"' >> $GODOT_EDITOR_CONFIG_FILENAME
-RUN echo 'export/android/debug_keystore = "/root/.android/debug.keystore"' >> $GODOT_EDITOR_CONFIG_FILENAME
-RUN echo 'export/android/debug_keystore_user = "androiddebugkey"' >> $GODOT_EDITOR_CONFIG_FILENAME
-RUN echo 'export/android/debug_keystore_pass = "android"' >> $GODOT_EDITOR_CONFIG_FILENAME
+# RUN echo 'export/android/debug_keystore = "/root/.android/debug.keystore"' >> $GODOT_EDITOR_CONFIG_FILENAME
+# RUN echo 'export/android/debug_keystore_user = "androiddebugkey"' >> $GODOT_EDITOR_CONFIG_FILENAME
+# RUN echo 'export/android/debug_keystore_pass = "android"' >> $GODOT_EDITOR_CONFIG_FILENAME
 
 # Mark the sytem as being a godot-run-cross-compiler image
 # --------------------------------------------------------
