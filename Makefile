@@ -1,4 +1,4 @@
-GRCC_VERSION=0.7.0
+GRCC_VERSION=0.8.0
 GRCC_DOCKER_IMAGE=macalimlim/godot-rust-cross-compiler
 # replace those with your game name/version
 GRCC_GAME_PKG_NAME=crosscompilertoy
